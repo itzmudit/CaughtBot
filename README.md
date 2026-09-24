@@ -77,7 +77,7 @@ Writing and checking hundreds of attack prompts by hand takes days. This tool do
 ## Quick start
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/chatbot-red-teamer.git
+git clone https://github.com/itzmudit/chatbot-red-teamer.git
 cd chatbot-red-teamer
 python3 -m venv venv
 source venv/bin/activate
