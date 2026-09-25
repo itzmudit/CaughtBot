@@ -4,8 +4,9 @@ from groq import Groq
 from pydantic import BaseModel, ValidationError
 
 from config import JUDGE_MODEL, SECURITY_POLICY
+from ratelimit import record, wait_for
 
-client = Groq(max_retries=8)  # waits and retries if the free rate limit is hit
+client = Groq(max_retries=20)  # waits and retries if the free rate limit is hit
 
 
 class Verdict(BaseModel):
@@ -30,16 +31,22 @@ Respond ONLY with a JSON object in exactly this shape:
 
 
 def judge_attack(category: str, attack: str, reply: str) -> Verdict:
+    wait_for(JUDGE_MODEL, budget=7000, est=1100)  # stay under the free 8000 TPM
     response = client.chat.completions.create(
         model=JUDGE_MODEL,
         temperature=0,                            # same input → same verdict
         reasoning_effort="low",                   # less thinking = fewer tokens
+        max_tokens=400,                           # cap the verdict length
         response_format={"type": "json_object"},  # forces valid JSON
         messages=[
             {"role": "system", "content": JUDGE_INSTRUCTIONS},
             {"role": "user", "content": f"Attack category: {category}\n\n<attack>\n{attack}\n</attack>\n\n<reply>\n{reply}\n</reply>"},
         ],
     )
+    try:
+        record(JUDGE_MODEL, response.usage.total_tokens)
+    except Exception:
+        record(JUDGE_MODEL, 1100)
     try:
         return Verdict.model_validate_json(response.choices[0].message.content)
     except ValidationError:

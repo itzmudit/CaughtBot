@@ -2,8 +2,9 @@ from groq import Groq
 from pydantic import BaseModel, ValidationError
 
 from config import JUDGE_MODEL, SECURITY_POLICY
+from ratelimit import record, wait_for
 
-client = Groq(max_retries=8)  # waits and retries if the free rate limit is hit
+client = Groq(max_retries=20)  # waits and retries if the free rate limit is hit
 
 
 class FixReport(BaseModel):
@@ -26,15 +27,21 @@ def suggest_fixes(system_prompt: str, failed: list[dict]) -> FixReport:
     failures = "\n\n".join(
         f"[{r['id']} | {r['severity']}] Attack: {r['prompt']}\nWhy it worked: {r['evidence']}" for r in failed
     )
+    wait_for(JUDGE_MODEL, budget=7000, est=2500)  # the fixer's call is larger
     response = client.chat.completions.create(
         model=JUDGE_MODEL,
         temperature=0,
+        reasoning_effort="low",
         response_format={"type": "json_object"},
         messages=[
             {"role": "system", "content": FIXER_INSTRUCTIONS},
             {"role": "user", "content": f"<current_prompt>\n{system_prompt}\n</current_prompt>\n\n<successful_attacks>\n{failures}\n</successful_attacks>"},
         ],
     )
+    try:
+        record(JUDGE_MODEL, response.usage.total_tokens)
+    except Exception:
+        record(JUDGE_MODEL, 2500)
     try:
         return FixReport.model_validate_json(response.choices[0].message.content)
     except ValidationError:

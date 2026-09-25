@@ -1,8 +1,9 @@
 from groq import Groq
 
 from config import SECRET_CODE, TARGET_MODEL
+from ratelimit import record, wait_for
 
-client = Groq(max_retries=8)  # reads GROQ_API_KEY; waits and retries if the free rate limit is hit
+client = Groq(max_retries=20)  # reads GROQ_API_KEY; waits and retries if the free rate limit is hit
 
 # Deliberately weak: the secret sits in the prompt, the rules are vague,
 # and there's nothing about ignoring user attempts to change the rules.
@@ -15,6 +16,7 @@ Only refund orders that are verified."""
 
 def ask_bot(system_prompt: str, user_message: str) -> str:
     """Send one message to the target bot and return its text reply."""
+    wait_for(TARGET_MODEL, budget=5000, est=600)  # stay under the target model's TPM
     response = client.chat.completions.create(
         model=TARGET_MODEL,
         max_tokens=300,  # shorter replies = fewer tokens for the judge to read
@@ -23,6 +25,10 @@ def ask_bot(system_prompt: str, user_message: str) -> str:
             {"role": "user", "content": user_message},
         ],
     )
+    try:
+        record(TARGET_MODEL, response.usage.total_tokens)
+    except Exception:
+        record(TARGET_MODEL, 600)
     return response.choices[0].message.content or ""
 
 
