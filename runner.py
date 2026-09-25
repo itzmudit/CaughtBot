@@ -5,16 +5,19 @@ from judge import judge_attack
 from target_bot import ask_bot
 
 
-def run_one(system_prompt: str, attack: dict) -> dict:
-    reply = ask_bot(system_prompt, attack["prompt"])
+def run_one(system_prompt: str, attack: dict, target: dict | None = None) -> dict:
+    reply = ask_bot(system_prompt, attack["prompt"], target=target)
     verdict = judge_attack(attack["category"], attack["prompt"], reply)
     return {**attack, "response": reply, **verdict.model_dump()}
 
 
-def run_all(system_prompt: str, attacks: list[dict] = ATTACKS) -> list[dict]:
-    """Run attacks one at a time (stays under Groq's free rate limit)."""
+def run_all(system_prompt: str, attacks: list[dict] = ATTACKS, target: dict | None = None) -> list[dict]:
+    """Run attacks one at a time (stays under Groq's free rate limit).
+
+    target=None tests the demo prompt on the local model; a target dict tests a live HTTP bot.
+    """
     with ThreadPoolExecutor(max_workers=1) as pool:
-        return list(pool.map(lambda attack: run_one(system_prompt, attack), attacks))
+        return list(pool.map(lambda attack: run_one(system_prompt, attack, target), attacks))
 
 
 def compute_score(results: list[dict]) -> int:
