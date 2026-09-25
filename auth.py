@@ -16,16 +16,34 @@ import sqlite3
 import uuid
 from datetime import datetime
 
+from dotenv import load_dotenv
+
+load_dotenv()  # load .env FIRST, so ADMIN_EMAILS below is read correctly
+
 DB_PATH = os.path.join(os.path.dirname(__file__), "redteam.db")
 _ITERATIONS = 200_000
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
-# Admins are set from .env: ADMIN_EMAILS=you@example.com,teammate@example.com
-ADMIN_EMAILS = {e.strip().lower() for e in os.getenv("ADMIN_EMAILS", "").split(",") if e.strip()}
+
+def _admin_emails() -> set[str]:
+    # "super-admins" bootstrapped from .env: ADMIN_EMAILS=a@x.com,b@y.com
+    # read live each time, so editing .env + restart always takes effect
+    return {e.strip().lower() for e in os.getenv("ADMIN_EMAILS", "").split(",") if e.strip()}
+
+
+def is_super_admin(email: str) -> bool:
+    """Admin from .env — can never be revoked inside the app."""
+    return email.strip().lower() in _admin_emails()
 
 
 def is_admin(email: str) -> bool:
-    return email.strip().lower() in ADMIN_EMAILS
+    """Admin if in .env (super-admin) OR promoted in the database."""
+    email = email.strip().lower()
+    if email in _admin_emails():
+        return True
+    with _connect() as conn:
+        row = conn.execute("SELECT is_admin FROM users WHERE email = ?", (email,)).fetchone()
+    return bool(row and row["is_admin"])
 
 
 def _connect() -> sqlite3.Connection:
@@ -41,13 +59,18 @@ def init_db() -> None:
             email TEXT UNIQUE NOT NULL,
             pw_hash TEXT NOT NULL,
             salt TEXT NOT NULL,
-            created_at TEXT NOT NULL)""")
+            created_at TEXT NOT NULL,
+            is_admin INTEGER NOT NULL DEFAULT 0)""")
         conn.execute("""CREATE TABLE IF NOT EXISTS scans (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id TEXT NOT NULL,
             ts TEXT NOT NULL,
             label TEXT,
             score INTEGER, blocked INTEGER, total INTEGER)""")
+        # migrate older databases that predate the is_admin column
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(users)")}
+        if "is_admin" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN is_admin INTEGER NOT NULL DEFAULT 0")
 
 
 def _hash(password: str, salt: str) -> str:
@@ -102,19 +125,43 @@ def scan_history(user_id: str) -> list[dict]:
     return [dict(r) for r in rows]
 
 
-# ── Admin-only queries ───────────────────────────────────────────────
+# ── Admin management (an admin can grant/revoke admin in-app) ─────────
 def all_users() -> list[dict]:
-    """Every account with its scan stats (no password data)."""
+    """Every account with its scan stats and admin status (no password data)."""
     init_db()
     with _connect() as conn:
         rows = conn.execute("""
-            SELECT u.id, u.email, u.created_at,
+            SELECT u.id, u.email, u.created_at, u.is_admin AS db_admin,
                    COUNT(s.id) AS scans,
                    MAX(s.score) AS best_score,
                    (SELECT score FROM scans WHERE user_id = u.id ORDER BY id DESC LIMIT 1) AS last_score
             FROM users u LEFT JOIN scans s ON s.user_id = u.id
             GROUP BY u.id ORDER BY u.created_at DESC""").fetchall()
-    return [dict(r) for r in rows]
+    users = []
+    for r in rows:
+        d = dict(r)
+        d["super_admin"] = is_super_admin(d["email"])
+        d["admin"] = bool(d["db_admin"]) or d["super_admin"]
+        users.append(d)
+    return users
+
+
+def set_admin(user_id: str, value: bool) -> None:
+    init_db()
+    with _connect() as conn:
+        conn.execute("UPDATE users SET is_admin = ? WHERE id = ?", (1 if value else 0, user_id))
+
+
+def grant_admin_by_email(email: str) -> tuple[bool, str]:
+    """Promote an existing user to admin, by email."""
+    init_db()
+    email = email.strip().lower()
+    with _connect() as conn:
+        row = conn.execute("SELECT id FROM users WHERE email = ?", (email,)).fetchone()
+    if row is None:
+        return False, "No account with that email. They must sign up first."
+    set_admin(row["id"], True)
+    return True, f"{email} is now an admin."
 
 
 def platform_stats() -> dict:

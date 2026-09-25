@@ -19,83 +19,102 @@ SEVERITY_COLOR = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "
 
 def logo(size: int = 44) -> str:
     return f"""<svg width="{size}" height="{size}" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="5" y="5" width="54" height="54" rx="15" fill="url(#cbg)"/>
-    <path d="M32 4v6M32 54v6M4 32h6M54 32h6" stroke="#04122b" stroke-width="3.4" stroke-linecap="round"/>
-    <rect x="20" y="23" width="24" height="19" rx="6" fill="#04122b"/>
-    <rect x="30.2" y="14" width="3.6" height="7" rx="1.8" fill="#04122b"/>
-    <circle cx="32" cy="12.4" r="3" fill="#04122b"/>
-    <circle cx="27" cy="32.5" r="3.2" fill="#7dd3fc"/>
-    <circle cx="37" cy="32.5" r="3.2" fill="#7dd3fc"/>
-    <rect x="27" y="37" width="10" height="2.4" rx="1.2" fill="#38bdf8"/>
+    <rect x="5" y="5" width="54" height="54" rx="16" fill="url(#cbg)"/>
+    <rect x="5.6" y="5.6" width="52.8" height="52.8" rx="15.4" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1.1"/>
+    <path d="M32 4v6M32 54v6M4 32h6M54 32h6" stroke="#0b0b18" stroke-width="3.4" stroke-linecap="round"/>
+    <rect x="20" y="23" width="24" height="19" rx="6" fill="#0b0b18"/>
+    <rect x="30.2" y="14" width="3.6" height="7" rx="1.8" fill="#0b0b18"/>
+    <circle cx="32" cy="12.4" r="3" fill="#0b0b18"/>
+    <circle cx="27" cy="32.5" r="3.2" fill="#e0e7ff"/>
+    <circle cx="37" cy="32.5" r="3.2" fill="#e0e7ff"/>
+    <rect x="27" y="37" width="10" height="2.4" rx="1.2" fill="#c7d2fe"/>
     <defs><linearGradient id="cbg" x1="5" y1="5" x2="59" y2="59" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#38bdf8"/><stop offset="1" stop-color="#7dd3fc"/></linearGradient></defs></svg>"""
+    <stop stop-color="#6366f1"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs></svg>"""
 
 
 st.set_page_config(page_title="CaughtBot", page_icon="🎯", layout="wide")
 
 
-# ── Styling: same palette (dark blue + light-blue/white), animated ───
-def inject_css(accent: str = "#38bdf8") -> None:
+# ── Styling: premium classy dark — Inter, aurora glow, glass panels ──
+def inject_css(accent: str = "#6366f1") -> None:
     st.markdown(f"""
     <style>
-    :root {{ --accent: {accent}; }}
-    /* animated "scanning code" background — dark blue with faint scrolling lines */
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    :root {{ --accent:{accent}; --muted:#8b93ad; --line:rgba(255,255,255,.08); --glass:rgba(255,255,255,.035); }}
+    html, body, .stApp, [class*="css"], button, input, textarea {{ font-family:'Inter',system-ui,sans-serif !important; }}
+
+    /* drifting aurora over near-black — dynamic but classy */
     .stApp {{
-      background-color:#070b1e;
-      background-image:
-        repeating-linear-gradient(0deg, rgba(56,189,248,.05) 0 1px, transparent 1px 26px),
-        radial-gradient(1100px 560px at 18% -12%, #16264f 0%, #0b1636 46%, #070b1e 82%);
+      background:
+        radial-gradient(620px 620px at 12% 6%, rgba(99,102,241,.20), transparent 60%),
+        radial-gradient(560px 560px at 88% 94%, rgba(168,85,247,.16), transparent 62%),
+        radial-gradient(520px 520px at 82% 10%, rgba(59,130,246,.12), transparent 60%),
+        #08090f;
       background-attachment: fixed;
-      animation: bgscroll 16s linear infinite;
+      animation: aurora 26s ease-in-out infinite;
     }}
-    @keyframes bgscroll {{ from{{background-position:0 0, 0 0;}} to{{background-position:0 -260px, 0 0;}} }}
-    .block-container {{ padding-top: 2rem; max-width: 1180px; }}
+    @keyframes aurora {{
+      0%,100% {{ background-position: 12% 6%, 88% 94%, 82% 10%, 0 0; }}
+      50%     {{ background-position: 20% 14%, 80% 86%, 72% 18%, 0 0; }}
+    }}
+    .block-container {{ padding-top: 2.4rem; max-width: 1100px; }}
 
-    @keyframes fadeUp  {{ from{{opacity:0; transform:translateY(20px);}} to{{opacity:1; transform:none;}} }}
-    @keyframes floatIn {{ from{{opacity:0; transform:translateY(40px) scale(.96);}} to{{opacity:1; transform:none;}} }}
-    @keyframes shimmer {{ 0%{{background-position:0% 50%}} 50%{{background-position:100% 50%}} 100%{{background-position:0% 50%}} }}
-    @keyframes pulse   {{ 0%,100%{{transform:scale(1);}} 50%{{transform:scale(1.04);}} }}
-    @keyframes riseIn  {{ from{{opacity:0; transform:translateY(28px);}} to{{opacity:1; transform:none;}} }}
+    @keyframes fadeUp  {{ from{{opacity:0; transform:translateY(16px);}} to{{opacity:1; transform:none;}} }}
+    @keyframes floatIn {{ from{{opacity:0; transform:translateY(22px);}} to{{opacity:1; transform:none;}} }}
 
-    /* Claude-style centered landing */
-    .landing {{ text-align:center; margin: 5vh 0 1.5rem; animation: fadeUp .6s ease; }}
-    .landing .mark {{ display:flex; justify-content:center; margin-bottom:14px; }}
-    .landing h1 {{ font-size:2.5rem; font-weight:800; color:#eaf2ff; margin:0; letter-spacing:-.6px; }}
-    .landing h1 span {{ color: var(--accent); }}
-    .landing p {{ color:#9fb4d6; font-size:1.05rem; margin:.5rem 0 0; }}
+    /* minimalist centered landing */
+    .landing {{ text-align:center; margin: 6vh 0 1.7rem; animation: fadeUp .7s cubic-bezier(.2,.7,.2,1); }}
+    .landing .mark {{ display:flex; justify-content:center; margin-bottom:20px; }}
+    .landing .mark svg {{ filter: drop-shadow(0 8px 26px rgba(99,102,241,.55)); }}
+    .landing h1 {{ font-size:2.6rem; font-weight:700; color:#f4f5fb; margin:0; letter-spacing:-1px; }}
+    .landing h1 span {{ background:linear-gradient(120deg,#818cf8,#c084fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }}
+    .landing p {{ color:var(--muted); font-size:1.04rem; margin:.7rem 0 0; font-weight:400; }}
 
-    .brand {{ display:flex; align-items:center; gap:10px; margin-bottom:6px; }}
-    .brand b {{ font-size:1.25rem; color:#eaf2ff; letter-spacing:-.3px; }}
-    .brand small {{ color:#7f93b8; }}
+    .brand {{ display:flex; align-items:center; gap:10px; margin-bottom:4px; }}
+    .brand b {{ font-size:1.18rem; color:#f4f5fb; letter-spacing:-.3px; font-weight:700; }}
 
+    /* glass panels */
     div[data-testid="stMetric"] {{
-      background: rgba(15,22,51,.72); border:1px solid #1e2a52; border-radius:16px; padding:16px 18px;
-      animation: riseIn .6s ease both;
+      background:var(--glass); border:1px solid var(--line); border-radius:16px; padding:18px 20px;
+      backdrop-filter: blur(10px); animation: fadeUp .5s ease both;
     }}
-    div[data-testid="stMetricValue"] {{ font-size:1.9rem; font-weight:800; color:#fff; }}
-    .stButton > button {{ border-radius:12px; font-weight:700; padding:.6rem 1.1rem; border:1px solid #24345f; }}
-    .stButton > button[kind="primary"] {{ background:var(--accent); color:#04122b; border:0; }}
+    div[data-testid="stMetricValue"] {{ font-size:1.85rem; font-weight:700; color:#f4f5fb; letter-spacing:-.5px; }}
+    div[data-testid="stMetricLabel"] {{ color:var(--muted); font-weight:500; }}
+
+    /* buttons */
+    .stButton > button {{
+      border-radius:12px; font-weight:600; padding:.6rem 1.15rem; transition:all .18s ease;
+      background:var(--glass); color:#e8eaf2; border:1px solid var(--line); backdrop-filter: blur(8px);
+    }}
+    .stButton > button:hover {{ border-color:rgba(129,140,248,.6); transform:translateY(-1px); }}
+    .stButton > button[kind="primary"] {{
+      background:linear-gradient(180deg,#7275f6,#5b5ee8); color:#fff; border:0;
+      box-shadow:0 10px 26px -10px rgba(99,102,241,.85);
+    }}
+    .stButton > button[kind="primary"]:hover {{ transform:translateY(-1px); box-shadow:0 14px 32px -10px rgba(99,102,241,1); }}
     .stDownloadButton > button {{
-      border-radius:12px; font-weight:800; background:linear-gradient(120deg,var(--accent),#7dd3fc);
-      color:#04122b; border:0; animation: pulse 2.6s ease infinite;
+      border-radius:12px; font-weight:700; background:var(--glass);
+      color:#c7d2fe; border:1px solid rgba(129,140,248,.45); backdrop-filter: blur(8px);
     }}
-    div[data-testid="stExpander"] {{ border:1px solid #1e2a52; border-radius:13px; background:rgba(15,22,51,.55); }}
-    section[data-testid="stSidebar"] {{ background:#0a1029; border-right:1px solid #16224a; }}
+    .stDownloadButton > button:hover {{ border-color:rgba(129,140,248,.9); color:#fff; }}
 
-    /* animated reveal for the whole report block */
-    #report-anchor ~ div [data-testid="stMetric"],
-    [data-testid="stAlert"], [data-testid="stDataFrame"], .stProgress, .stDownloadButton {{
-      animation: riseIn .6s ease both;
-    }}
-    .stApp textarea {{ background:rgba(9,14,34,.85)!important; border-radius:12px!important; }}
+    div[data-testid="stExpander"] {{ border:1px solid var(--line); border-radius:14px; background:var(--glass); backdrop-filter: blur(8px); }}
+    section[data-testid="stSidebar"] {{ background:rgba(8,9,15,.72); border-right:1px solid var(--line); backdrop-filter: blur(14px); }}
+    .stApp textarea {{ background:rgba(255,255,255,.03)!important; border:1px solid var(--line)!important; border-radius:14px!important; color:#e8eaf2!important; }}
+    [data-testid="stDataFrame"] {{ border:1px solid var(--line); border-radius:12px; overflow:hidden; }}
+    hr {{ border-color:var(--line)!important; }}
 
+    [data-testid="stAlert"], [data-testid="stDataFrame"], .stProgress, .stDownloadButton {{ animation: fadeUp .6s ease both; }}
+
+    /* floating completion toast — glass card with accent edge */
     .flash {{
-      position: fixed; right: 26px; bottom: 26px; z-index: 9999;
-      background: linear-gradient(120deg, var(--accent), #7dd3fc); color:#04122b;
-      padding: 16px 22px; border-radius: 14px; font-weight:800; min-width: 240px;
-      box-shadow: 0 16px 44px rgba(56,189,248,.45); animation: floatIn .5s ease, pulse 2.4s ease infinite;
+      position: fixed; right: 24px; bottom: 24px; z-index: 9999;
+      background: rgba(15,17,26,.92); color:#f4f5fb; border:1px solid var(--line);
+      border-left:3px solid #818cf8; backdrop-filter: blur(16px);
+      padding: 15px 20px; border-radius: 14px; font-weight:600; min-width: 234px;
+      box-shadow: 0 24px 60px rgba(0,0,0,.6); animation: floatIn .5s ease;
     }}
-    .flash small {{ display:block; font-weight:600; opacity:.85; }}
+    .flash small {{ display:block; font-weight:400; color:var(--muted); margin-top:3px; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -116,7 +135,7 @@ def greeting() -> str:
 # ── Session defaults ─────────────────────────────────────────────────
 ss = st.session_state
 ss.setdefault("user", None)
-ss.setdefault("accent", "#38bdf8")
+ss.setdefault("accent", "#6366f1")
 ss.setdefault("prompt", WEAK_PROMPT)
 ss.setdefault("results", None)
 ss.setdefault("fix", None)
@@ -226,24 +245,7 @@ with st.sidebar:
             st.caption("No scans yet. Run one!")
 
     if user.get("is_admin"):
-        with st.expander("🛡️ Admin", expanded=False):
-            stats = auth.platform_stats()
-            st.metric("Users", stats["users"])
-            st.metric("Scans", stats["scans"])
-            st.metric("Avg score", f"{stats['avg_score']}/100")
-            udf = pd.DataFrame(auth.all_users())
-            if not udf.empty:
-                st.dataframe(udf.rename(columns={"email": "Email", "id": "ID", "scans": "Scans",
-                                                 "best_score": "Best", "last_score": "Last"})[
-                    ["Email", "ID", "Scans", "Best", "Last"]], hide_index=True, use_container_width=True)
-                others = [u for u in auth.all_users() if u["id"] != user["id"]]
-                if others:
-                    pick = st.selectbox("Remove user", [f"{u['email']} ({u['id']})" for u in others])
-                    if st.button("🗑️ Delete user"):
-                        auth.delete_user(pick.split("(")[-1].rstrip(")"))
-                        st.success("Removed.")
-                        st.rerun()
-            st.caption("Set via ADMIN_EMAILS in .env. Passwords never shown.")
+        st.caption("🛡️ You're an admin — the Admin dashboard is on the main page.")
 
 # Active attack list from customization
 active_attacks = [a for a in ATTACKS if a["category"] in chosen_cats]
@@ -264,6 +266,61 @@ st.markdown(f"""
   <h1>{greeting()}, {name}</h1>
   <p>Point CaughtBot at a system prompt and it will try {len(active_attacks)} ways to break it.</p>
 </div>""", unsafe_allow_html=True)
+
+# ── Admin dashboard (admins only) ────────────────────────────────────
+if user.get("is_admin"):
+    with st.expander("🛡️ Admin dashboard", expanded=False):
+        stats = auth.platform_stats()
+        a1, a2, a3 = st.columns(3)
+        a1.metric("Total users", stats["users"])
+        a2.metric("Total scans", stats["scans"])
+        a3.metric("Avg score", f"{stats['avg_score']}/100")
+
+        users = auth.all_users()
+        if not users:
+            st.caption("No users registered yet.")
+        else:
+            udf = pd.DataFrame(users)
+            show = udf.assign(
+                Admin=udf["admin"].map(lambda x: "✅" if x else "—"),
+                Type=udf["super_admin"].map(lambda x: "super (.env)" if x else ""),
+            ).rename(columns={"email": "Email", "id": "ID", "scans": "Scans",
+                              "best_score": "Best", "last_score": "Last"})
+            st.markdown("**All registered users**")
+            st.dataframe(show[["Email", "ID", "Admin", "Type", "Scans", "Best", "Last"]],
+                         hide_index=True, use_container_width=True)
+
+            st.markdown("**Manage admins**")
+            g1, g2 = st.columns(2)
+            with g1:
+                new_admin = st.text_input("Grant admin by email", key="grant_email",
+                                          placeholder="friend@example.com")
+                if st.button("➕ Make admin", use_container_width=True) and new_admin.strip():
+                    ok, msg = auth.grant_admin_by_email(new_admin)
+                    (st.success if ok else st.error)(msg)
+                    if ok:
+                        st.rerun()
+            with g2:
+                revocable = [u for u in users if u["db_admin"] and not u["super_admin"] and u["id"] != user["id"]]
+                if revocable:
+                    rev = st.selectbox("Revoke admin from", [f"{u['email']} ({u['id']})" for u in revocable], key="rev")
+                    if st.button("➖ Revoke admin", use_container_width=True):
+                        auth.set_admin(rev.split("(")[-1].rstrip(")"), False)
+                        st.success("Admin revoked.")
+                        st.rerun()
+                else:
+                    st.caption("No revocable admins. Super-admins (from .env) can't be revoked here.")
+
+            st.markdown("**Remove a user**")
+            others = [u for u in users if u["id"] != user["id"]]
+            if others:
+                pick = st.selectbox("Select a user", [f"{u['email']} ({u['id']})" for u in others], key="delpick")
+                if st.button("🗑️ Delete user and their scans"):
+                    auth.delete_user(pick.split("(")[-1].rstrip(")"))
+                    st.success("User removed.")
+                    st.rerun()
+        st.caption("Super-admins are set via ADMIN_EMAILS in .env and always stay admin. "
+                   "Any admin can promote others here. Passwords are never shown.")
 
 _, mid, _ = st.columns([1, 2.4, 1])
 with mid:
