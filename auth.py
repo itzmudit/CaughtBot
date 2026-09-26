@@ -146,6 +146,17 @@ def all_users() -> list[dict]:
     return users
 
 
+def leaderboard(limit: int = 10) -> list[dict]:
+    """Highest-scoring scans across all users (for a friendly leaderboard)."""
+    init_db()
+    with _connect() as conn:
+        rows = conn.execute(
+            "SELECT u.email AS email, s.score AS score, s.label AS label "
+            "FROM scans s JOIN users u ON u.id = s.user_id "
+            "ORDER BY s.score DESC, s.id DESC LIMIT ?", (limit,)).fetchall()
+    return [dict(r) for r in rows]
+
+
 def set_admin(user_id: str, value: bool) -> None:
     init_db()
     with _connect() as conn:

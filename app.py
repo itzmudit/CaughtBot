@@ -158,6 +158,7 @@ ss.setdefault("custom_attacks", [])
 ss.setdefault("flash", None)
 ss.setdefault("target", None)  # None = demo prompt; dict = live HTTP bot
 ss.setdefault("summary", None)
+ss.setdefault("perfix", {})  # per-attack targeted fixes, keyed by attack id
 
 inject_css(ss.accent)
 
@@ -297,6 +298,16 @@ with st.sidebar:
         else:
             st.caption("No scans yet. Run one!")
 
+    with st.expander("🏆 Leaderboard", expanded=False):
+        board = auth.leaderboard(10)
+        if board:
+            st.dataframe(pd.DataFrame([
+                {"#": i + 1, "User": b["email"].split("@")[0][:3] + "***", "Score": b["score"]}
+                for i, b in enumerate(board)]), hide_index=True, use_container_width=True)
+            st.caption("Highest security scores across all users.")
+        else:
+            st.caption("No scans yet.")
+
     if user.get("is_admin"):
         st.caption("🛡️ You're an admin — the Admin dashboard is on the main page.")
 
@@ -390,6 +401,7 @@ def finish(results, label):
     ss.prompt = prompt
     ss.results = results
     ss.summary = None  # a fresh scan invalidates the old AI summary
+    ss.perfix = {}
     score = compute_score(results)
     ss.history.append(score)
     blocked = sum(1 for r in results if not r["succeeded"])
@@ -479,10 +491,16 @@ if results:
     df = pd.DataFrame(results)
     chart_col.markdown("**Successful attacks by category**")
     chart_col.bar_chart(df.groupby("category")["succeeded"].sum())
-    table_col.markdown("**Category breakdown**")
-    table_col.dataframe(pd.DataFrame([{"Category": c, "Broke in": f"{s} / {t}", "Blocked": t - s}
-                                      for c, (s, t) in category_breakdown(results).items()]),
-                        hide_index=True, use_container_width=True)
+    if breached:
+        sev = pd.DataFrame(breached)["severity"].value_counts()
+        order = [s for s in ["critical", "high", "medium", "low"] if s in sev.index]
+        table_col.markdown("**Breaches by severity**")
+        table_col.bar_chart(sev.reindex(order))
+    else:
+        table_col.markdown("**Category breakdown**")
+        table_col.dataframe(pd.DataFrame([{"Category": c, "Broke in": f"{s} / {t}", "Blocked": t - s}
+                                          for c, (s, t) in category_breakdown(results).items()]),
+                            hide_index=True, use_container_width=True)
 
     report_fixes = ss.fix.fixes if ss.fix else None
     st.download_button("⬇️ Download PDF report",
@@ -499,6 +517,13 @@ if results:
             st.markdown("**Bot reply**")
             st.code(r["response"], language=None)
             st.markdown(f"**Judge's evidence:** {r['evidence']}")
+            if st.button("🩹 Fix this one", key=f"fixone_{r['id']}"):
+                with st.spinner("Finding a targeted fix..."):
+                    ss.perfix[r["id"]] = suggest_fixes(ss.prompt, [r]).fixes
+            if ss.perfix.get(r["id"]):
+                st.markdown("**Targeted fixes:**")
+                for item in ss.perfix[r["id"]]:
+                    st.markdown(f"- {item}")
 
     if ss.fix:
         st.subheader("🩹 Suggested fixes")
