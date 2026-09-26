@@ -38,7 +38,7 @@ def ask_bot(system_prompt: str, user_message: str, target: dict | None = None) -
     """
     if target and target.get("mode") == "http":
         return ask_live_bot(target, user_message)
-    wait_for(TARGET_MODEL, budget=5000, est=600)  # stay under the target model's TPM
+    wait_for(TARGET_MODEL, budget=4500, est=700)  # stay under the target model's TPM
     response = client.chat.completions.create(
         model=TARGET_MODEL,
         max_tokens=300,  # shorter replies = fewer tokens for the judge to read

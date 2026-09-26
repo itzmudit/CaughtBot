@@ -290,7 +290,9 @@ with st.sidebar:
 
     with st.expander("🎛️ Customize", expanded=False):
         chosen_cats = CATEGORIES  # all categories always run
-        st.caption(f"Every run fires all **{len(ATTACKS)}** built-in attacks. Add 10 more with AI, or your own below.")
+        n_run = st.slider("Attacks to run", 8, len(ATTACKS), len(ATTACKS),
+                          help="Fewer = faster & safer on the free tier. Use ~12 for a quick live demo, 40 for a full audit.")
+        st.caption(f"Fires **{n_run}** of {len(ATTACKS)} built-in attacks (+ any AI/custom below).")
 
         st.markdown("**✨ Generate AI attacks** (tailored to the prompt above)")
         n_ai = st.slider("How many (max 10)", 1, 10, 10, key="n_ai")
@@ -338,8 +340,8 @@ with st.sidebar:
     if user.get("is_admin"):
         st.caption("🛡️ You're an admin — the Admin dashboard is on the main page.")
 
-# Active attack list: all built-in attacks + any AI/custom ones added
-active_attacks = list(ATTACKS) + ss.custom_attacks
+# Active attack list: chosen number of built-in attacks + any AI/custom ones added
+active_attacks = list(ATTACKS)[:n_run] + ss.custom_attacks
 
 # ── Floating completion message ──────────────────────────────────────
 if ss.flash:

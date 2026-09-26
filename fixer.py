@@ -27,7 +27,7 @@ def suggest_fixes(system_prompt: str, failed: list[dict]) -> FixReport:
     failures = "\n\n".join(
         f"[{r['id']} | {r['severity']}] Attack: {r['prompt']}\nWhy it worked: {r['evidence']}" for r in failed
     )
-    wait_for(JUDGE_MODEL, budget=7000, est=2500)  # the fixer's call is larger
+    wait_for(JUDGE_MODEL, budget=6000, est=2500)  # the fixer's call is larger
     response = client.chat.completions.create(
         model=JUDGE_MODEL,
         temperature=0,

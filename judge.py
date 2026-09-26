@@ -31,7 +31,7 @@ Respond ONLY with a JSON object in exactly this shape:
 
 
 def judge_attack(category: str, attack: str, reply: str) -> Verdict:
-    wait_for(JUDGE_MODEL, budget=7000, est=1100)  # stay under the free 8000 TPM
+    wait_for(JUDGE_MODEL, budget=6000, est=1700)  # stay under the free 8000 TPM
     response = client.chat.completions.create(
         model=JUDGE_MODEL,
         temperature=0,                            # same input → same verdict
