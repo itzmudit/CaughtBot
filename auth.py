@@ -67,6 +67,10 @@ def init_db() -> None:
             ts TEXT NOT NULL,
             label TEXT,
             score INTEGER, blocked INTEGER, total INTEGER)""")
+        conn.execute("""CREATE TABLE IF NOT EXISTS sessions (
+            token TEXT PRIMARY KEY,
+            user_id TEXT NOT NULL,
+            created_at TEXT NOT NULL)""")
         # migrate older databases that predate the is_admin column
         cols = {r[1] for r in conn.execute("PRAGMA table_info(users)")}
         if "is_admin" not in cols:
@@ -108,6 +112,34 @@ def log_in(email: str, password: str) -> tuple[bool, str, dict | None]:
     if _hash(password, row["salt"]) != row["pw_hash"]:
         return False, "Wrong password.", None
     return True, "Welcome back!", {"id": row["id"], "email": row["email"], "is_admin": is_admin(row["email"])}
+
+
+def create_session(user_id: str) -> str:
+    """Make a login token (kept in the URL) so a refresh stays logged in."""
+    init_db()
+    token = uuid.uuid4().hex
+    with _connect() as conn:
+        conn.execute("INSERT INTO sessions (token, user_id, created_at) VALUES (?,?,?)",
+                     (token, user_id, datetime.now().isoformat()))
+    return token
+
+
+def user_by_token(token: str) -> dict | None:
+    """Return the logged-in user for a session token, or None."""
+    init_db()
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT u.id AS id, u.email AS email FROM sessions s "
+            "JOIN users u ON u.id = s.user_id WHERE s.token = ?", (token,)).fetchone()
+    if row is None:
+        return None
+    return {"id": row["id"], "email": row["email"], "is_admin": is_admin(row["email"])}
+
+
+def delete_session(token: str) -> None:
+    init_db()
+    with _connect() as conn:
+        conn.execute("DELETE FROM sessions WHERE token = ?", (token,))
 
 
 def record_scan(user_id: str, score: int, blocked: int, total: int, label: str = "scan") -> None:

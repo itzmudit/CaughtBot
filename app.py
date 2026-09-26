@@ -193,6 +193,7 @@ def login_screen() -> None:
                     ok, msg, user = auth.log_in(email, pw)
                     if ok:
                         ss.user = user
+                        st.query_params["t"] = auth.create_session(user["id"])
                         ss.flash = {"title": "Logged in", "sub": f"ID {user['id']}"}
                         st.rerun()
                     else:
@@ -204,6 +205,7 @@ def login_screen() -> None:
                     ok, msg, user = auth.sign_up(email2, pw2)
                     if ok:
                         ss.user = user
+                        st.query_params["t"] = auth.create_session(user["id"])
                         ss.flash = {"title": "Account created 🎉", "sub": f"Your ID: {user['id']}"}
                         st.balloons()
                         st.rerun()
@@ -211,6 +213,16 @@ def login_screen() -> None:
                         st.error(msg)
             st.caption("One account per email · passwords stored hashed, never in plain text.")
 
+
+# Restore login from the URL token (so a refresh stays logged in)
+if ss.user is None:
+    _tok = st.query_params.get("t")
+    if _tok:
+        _u = auth.user_by_token(_tok)
+        if _u:
+            ss.user = _u
+        else:
+            st.query_params.clear()
 
 if ss.user is None:
     login_screen()
@@ -226,6 +238,10 @@ with st.sidebar:
     admin_badge = " · 🛡️ ADMIN" if user.get("is_admin") else ""
     st.caption(f"👤 {user['email'].split('@')[0]}{admin_badge}  ·  ID `{user['id']}`")
     if st.button("Log out", use_container_width=True):
+        _tok = st.query_params.get("t")
+        if _tok:
+            auth.delete_session(_tok)
+        st.query_params.clear()
         for k in ["user", "results", "fix", "history", "trajectory", "custom_attacks", "flash", "target"]:
             ss.pop(k, None)
         st.rerun()
