@@ -255,7 +255,7 @@ with st.sidebar:
         st.caption("Run a scan with failing attacks first.")
 
     with st.expander("🎛️ Customize", expanded=False):
-        chosen_cats = st.multiselect("Attack categories", CATEGORIES, default=CATEGORIES)
+        chosen_cats = CATEGORIES  # all categories always run
         max_attacks = st.slider("Max attacks to run", 4, len(ATTACKS) + len(ss.custom_attacks), 16,
                                 help="On the free tier, fewer attacks finish faster. 32 works too but is slower.")
 
@@ -296,15 +296,6 @@ with st.sidebar:
         else:
             st.caption("No scans yet. Run one!")
 
-    with st.expander("🏆 Leaderboard", expanded=False):
-        board = auth.leaderboard(10)
-        if board:
-            st.dataframe(pd.DataFrame([
-                {"#": i + 1, "User": b["email"].split("@")[0][:3] + "***", "Score": b["score"]}
-                for i, b in enumerate(board)]), hide_index=True, use_container_width=True)
-            st.caption("Highest security scores across all users.")
-        else:
-            st.caption("No scans yet.")
 
     if user.get("is_admin"):
         st.caption("🛡️ You're an admin — the Admin dashboard is on the main page.")
