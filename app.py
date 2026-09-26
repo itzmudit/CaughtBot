@@ -10,7 +10,7 @@ from fixer import executive_summary, suggest_fixes
 from harden import auto_harden
 from report import category_breakdown
 from report_pdf import build_attacks_pdf, build_pdf_report
-from runner import compute_score, run_all
+from runner import compute_score, run_all, run_one
 from target_bot import WEAK_PROMPT
 
 CATEGORIES = ["Prompt leakage", "Instruction override", "Role-play jailbreak", "Off-limits action", "Encoding / obfuscation", "Persona unmask"]
@@ -276,17 +276,19 @@ with st.sidebar:
         chosen_cats = CATEGORIES  # all categories always run
         st.caption(f"Every run fires all **{len(ATTACKS)}** built-in attacks. Add 10 more with AI, or your own below.")
 
-        st.markdown("**✨ Generate 10 AI attacks** (tailored to the prompt above)")
+        st.markdown("**✨ Generate AI attacks** (tailored to the prompt above)")
+        n_ai = st.slider("How many (max 10)", 1, 10, 10, key="n_ai")
         if st.button("✨ Generate attacks", use_container_width=True):
             try:
-                with st.spinner("Inventing 10 attacks tailored to this prompt..."):
-                    new = generate_attacks(ss.prompt or "a customer-support chatbot", 10)
+                with st.spinner(f"Inventing {n_ai} attacks tailored to this prompt..."):
+                    new = generate_attacks(ss.prompt or "a customer-support chatbot", n_ai)
                 if new:
-                    base = len(ss.custom_attacks)
-                    for i, a in enumerate(new, 1):
-                        a["id"] = f"AI-{base + i:02d}"
-                    ss.custom_attacks.extend(new)
-                    st.success(f"Added {len(new)} AI attacks.")
+                    # replace old AI attacks (keep manual ones) so AI never exceeds 10
+                    ss.custom_attacks = [a for a in ss.custom_attacks if not a["id"].startswith("AI-")]
+                    for i, a in enumerate(new[:10], 1):
+                        a["id"] = f"AI-{i:02d}"
+                    ss.custom_attacks.extend(new[:10])
+                    st.success(f"Added {min(len(new), 10)} AI attacks.")
                 else:
                     st.warning("Couldn't generate — try again.")
             except Exception as e:
@@ -424,9 +426,16 @@ if run_clicked and not ss.target and not prompt.strip():
     st.warning("Enter a system prompt first (or click **Load demo**), or switch on a live target in the sidebar.")
 elif run_clicked:
     try:
-        where = "the live bot" if ss.target else "the prompt"
-        with st.spinner(f"Firing {len(active_attacks)} attacks at {where} and judging every reply..."):
-            results = run_all(prompt, active_attacks, target=ss.target)
+        total = len(active_attacks)
+        bar = st.progress(0.0)
+        status = st.empty()
+        results = []
+        for i, atk in enumerate(active_attacks, 1):
+            status.markdown(f"🎯 Firing attack **{i} / {total}** — `{atk['id']}` · {atk['category']}")
+            results.append(run_one(prompt, atk, target=ss.target))
+            bar.progress(i / total)
+        status.empty()
+        bar.empty()
         ss.fix = None
         ss.trajectory = None
         finish(results, "Live scan" if ss.target else "Scan")
