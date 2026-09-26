@@ -15,16 +15,16 @@ This guide gets it running on a fresh laptop. It takes about 10 minutes. **No cr
   Get it from [python.org/downloads](https://www.python.org/downloads/). On Windows, tick
   **"Add Python to PATH"** during install.
 - A **free Groq API key** (step 4 below). No card required.
-- The project files (you should have received a folder called `CaughtBot`).
+- The project files (you should have received a folder called `CaughtBotPrivate`).
 
 ---
 
 ## Step 1 — Open a terminal in the project folder
 
-Put the `CaughtBot` folder somewhere easy (e.g. Desktop), then open a terminal **inside it**:
+Put the `CaughtBotPrivate` folder somewhere easy (e.g. Desktop), then open a terminal **inside it**:
 
 - **Windows:** open the folder in File Explorer → click the address bar → type `cmd` → Enter.
-- **Linux/Mac:** open Terminal → `cd` into the folder, e.g. `cd ~/Desktop/CaughtBot`.
+- **Linux/Mac:** open Terminal → `cd` into the folder, e.g. `cd ~/Desktop/CaughtBotPrivate`.
 
 Everything below runs from inside this folder.
 

@@ -75,8 +75,8 @@ Built for **Hackin' Summer 2026** (DSC, JIIT).
 Full cross-platform instructions are in **[SETUP.md](SETUP.md)**. In short:
 
 ```bash
-git clone https://github.com/itzmudit/CaughtBot.git
-cd CaughtBot
+git clone https://github.com/itzmudit/CaughtBotPrivate.git
+cd CaughtBotPrivate
 python3 -m venv venv
 source venv/bin/activate            # Windows: venv\Scripts\activate
 pip install -r requirements.txt
