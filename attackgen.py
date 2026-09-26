@@ -11,7 +11,7 @@ from ratelimit import record, wait_for
 
 client = Groq(max_retries=20)
 
-CATEGORIES = ["Prompt leakage", "Instruction override", "Role-play jailbreak", "Off-limits action"]
+CATEGORIES = ["Prompt leakage", "Instruction override", "Role-play jailbreak", "Off-limits action", "Encoding / obfuscation", "Persona unmask"]
 
 
 class _GenAttack(BaseModel):

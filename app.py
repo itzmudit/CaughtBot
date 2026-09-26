@@ -6,14 +6,14 @@ import streamlit as st
 import auth
 from attackgen import generate_attacks
 from attacks import ATTACKS
-from fixer import suggest_fixes
+from fixer import executive_summary, suggest_fixes
 from harden import auto_harden
 from report import category_breakdown
 from report_pdf import build_pdf_report
 from runner import compute_score, run_all
 from target_bot import WEAK_PROMPT
 
-CATEGORIES = ["Prompt leakage", "Instruction override", "Role-play jailbreak", "Off-limits action"]
+CATEGORIES = ["Prompt leakage", "Instruction override", "Role-play jailbreak", "Off-limits action", "Encoding / obfuscation", "Persona unmask"]
 SEVERITY_ORDER = {"critical": 0, "high": 1, "medium": 2, "low": 3, "none": 4}
 SEVERITY_COLOR = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🔵", "none": "⚪"}
 
@@ -157,6 +157,7 @@ ss.setdefault("trajectory", None)
 ss.setdefault("custom_attacks", [])
 ss.setdefault("flash", None)
 ss.setdefault("target", None)  # None = demo prompt; dict = live HTTP bot
+ss.setdefault("summary", None)
 
 inject_css(ss.accent)
 
@@ -388,6 +389,7 @@ with mid:
 def finish(results, label):
     ss.prompt = prompt
     ss.results = results
+    ss.summary = None  # a fresh scan invalidates the old AI summary
     score = compute_score(results)
     ss.history.append(score)
     blocked = sum(1 for r in results if not r["succeeded"])
@@ -451,6 +453,14 @@ if results:
     score = history[-1]
     delta = history[-1] - history[-2] if len(history) > 1 else None
 
+    # AI-written executive summary (on demand, cached for this scan)
+    if ss.summary:
+        st.info(f"🧠 **Summary** — {ss.summary}")
+    elif st.button("🧠 Generate AI summary"):
+        with st.spinner("Writing an executive summary..."):
+            ss.summary = executive_summary(results, score)
+        st.rerun()
+
     wscore = weighted_score(results)
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Security score", f"{score}/100", delta=delta)
@@ -476,7 +486,7 @@ if results:
 
     report_fixes = ss.fix.fixes if ss.fix else None
     st.download_button("⬇️ Download PDF report",
-                       data=build_pdf_report(prompt, results, fixes=report_fixes),
+                       data=build_pdf_report(prompt, results, fixes=report_fixes, summary=ss.summary),
                        file_name=f"caughtbot_report_{user['id']}.pdf", mime="application/pdf")
 
     st.subheader("🚨 Successful attacks")

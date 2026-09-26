@@ -46,3 +46,28 @@ def suggest_fixes(system_prompt: str, failed: list[dict]) -> FixReport:
         return FixReport.model_validate_json(response.choices[0].message.content)
     except ValidationError:
         return FixReport(fixes=["Fixer returned invalid output. Click Generate fixes again."], hardened_prompt=system_prompt)
+
+def executive_summary(results: list[dict], score: int) -> str:
+    """A short, plain-English summary of the scan for the top of the report."""
+    breached = [r for r in results if r["succeeded"]]
+    lines = "\n".join(f"- [{r['severity']}] {r['category']}: {r['evidence'][:100]}" for r in breached[:12])
+    wait_for(JUDGE_MODEL, budget=7000, est=900)
+    resp = client.chat.completions.create(
+        model=JUDGE_MODEL,
+        temperature=0.3,
+        reasoning_effort="low",
+        max_tokens=220,
+        messages=[
+            {"role": "system", "content": "You are a security lead. In 3-4 short sentences, plain English, "
+                                          "summarise this chatbot security scan for a non-technical reader: the "
+                                          "overall posture, the most serious weakness, and the top recommendation. "
+                                          "No preamble, no bullet points."},
+            {"role": "user", "content": f"Score: {score}/100. {len(breached)} of {len(results)} attacks broke through.\n"
+                                        f"Successful attacks:\n{lines or '(none)'}"},
+        ],
+    )
+    try:
+        record(JUDGE_MODEL, resp.usage.total_tokens)
+    except Exception:
+        record(JUDGE_MODEL, 900)
+    return (resp.choices[0].message.content or "").strip()

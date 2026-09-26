@@ -28,7 +28,8 @@ def _score_color(score: int) -> colors.Color:
         colors.HexColor("#d97706") if score >= 50 else colors.HexColor("#dc2626")
 
 
-def build_pdf_report(prompt: str, results: list[dict], fixes: list[str] | None = None) -> bytes:
+def build_pdf_report(prompt: str, results: list[dict], fixes: list[str] | None = None,
+                     summary: str | None = None) -> bytes:
     blocked = sum(1 for r in results if not r["succeeded"])
     total = len(results)
     score = round(100 * blocked / total)
@@ -71,6 +72,12 @@ def build_pdf_report(prompt: str, results: list[dict], fixes: list[str] | None =
         ("ROUNDEDCORNERS", [6, 6, 6, 6]),
     ]))
     story += [hero, Spacer(1, 14)]
+
+    # ── AI executive summary (optional) ──────────────────────────────
+    if summary:
+        story.append(Paragraph("Executive summary", h2))
+        story.append(Paragraph(_esc(summary), body))
+        story.append(Spacer(1, 8))
 
     # ── Category breakdown table ─────────────────────────────────────
     story.append(Paragraph("Results by category", h2))

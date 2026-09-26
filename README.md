@@ -16,7 +16,7 @@ Built for **Hackin' Summer 2026** (DSC, JIIT).
 
 ## What it does
 
-1. **Attack** — sends 32 attacks (4 categories) to the target chatbot.
+1. **Attack** — sends 40+ attacks (6 categories) to the target chatbot.
 2. **Judge** — a second, larger LLM reads each reply and returns a structured verdict:
    `succeeded`, `evidence` (the exact offending quote), and `severity` (none → critical).
 3. **Report** — a security score (% of attacks blocked), a per-category breakdown, and every
@@ -26,7 +26,7 @@ Built for **Hackin' Summer 2026** (DSC, JIIT).
 
 ## Features
 
-- 🎯 **32-attack library** — prompt leakage, instruction override, role-play jailbreaks, off-limits actions.
+- 🎯 **40+ attack library** — prompt leakage, instruction override, role-play jailbreaks, off-limits actions.
 - ⚖️ **LLM-as-judge** — scores every reply against a *fixed* security policy; output validated with Pydantic (no fragile string matching).
 - 🤖 **Auto-harden** — verified best-of-N prompt hardening; keeps only fixes that measurably raise the score.
 - 🔐 **Accounts** — email + password login (passwords stored **hashed**, one account per email), each user gets a unique tester ID and saved scan history.
