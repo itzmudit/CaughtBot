@@ -26,18 +26,18 @@ def logo(size: int = 44) -> str:
     <rect x="20" y="23" width="24" height="19" rx="6" fill="#0b0b18"/>
     <rect x="30.2" y="14" width="3.6" height="7" rx="1.8" fill="#0b0b18"/>
     <circle cx="32" cy="12.4" r="3" fill="#0b0b18"/>
-    <circle cx="27" cy="32.5" r="3.2" fill="#e0e7ff"/>
-    <circle cx="37" cy="32.5" r="3.2" fill="#e0e7ff"/>
-    <rect x="27" y="37" width="10" height="2.4" rx="1.2" fill="#c7d2fe"/>
+    <circle cx="27" cy="32.5" r="3.2" fill="#d1fae5"/>
+    <circle cx="37" cy="32.5" r="3.2" fill="#d1fae5"/>
+    <rect x="27" y="37" width="10" height="2.4" rx="1.2" fill="#a7f3d0"/>
     <defs><linearGradient id="cbg" x1="5" y1="5" x2="59" y2="59" gradientUnits="userSpaceOnUse">
-    <stop stop-color="#6366f1"/><stop offset="1" stop-color="#a855f7"/></linearGradient></defs></svg>"""
+    <stop stop-color="#10b981"/><stop offset="1" stop-color="#34d399"/></linearGradient></defs></svg>"""
 
 
 st.set_page_config(page_title="CaughtBot", page_icon="🎯", layout="wide")
 
 
 # ── Styling: premium classy dark — Inter, aurora glow, glass panels ──
-def inject_css(accent: str = "#6366f1") -> None:
+def inject_css(accent: str = "#10b981") -> None:
     st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -47,9 +47,9 @@ def inject_css(accent: str = "#6366f1") -> None:
     /* drifting aurora over near-black — dynamic but classy */
     .stApp {{
       background:
-        radial-gradient(620px 620px at 12% 6%, rgba(99,102,241,.20), transparent 60%),
-        radial-gradient(560px 560px at 88% 94%, rgba(168,85,247,.16), transparent 62%),
-        radial-gradient(520px 520px at 82% 10%, rgba(59,130,246,.12), transparent 60%),
+        radial-gradient(620px 620px at 12% 6%, rgba(16,185,129,.20), transparent 60%),
+        radial-gradient(560px 560px at 88% 94%, rgba(52,211,153,.16), transparent 62%),
+        radial-gradient(520px 520px at 82% 10%, rgba(163,230,53,.12), transparent 60%),
         #08090f;
       background-attachment: fixed;
       animation: aurora 26s ease-in-out infinite;
@@ -66,9 +66,9 @@ def inject_css(accent: str = "#6366f1") -> None:
     /* minimalist centered landing */
     .landing {{ text-align:center; margin: 6vh 0 1.7rem; animation: fadeUp .7s cubic-bezier(.2,.7,.2,1); }}
     .landing .mark {{ display:flex; justify-content:center; margin-bottom:20px; }}
-    .landing .mark svg {{ filter: drop-shadow(0 8px 26px rgba(99,102,241,.55)); }}
+    .landing .mark svg {{ filter: drop-shadow(0 8px 26px rgba(16,185,129,.55)); }}
     .landing h1 {{ font-size:2.6rem; font-weight:700; color:#f4f5fb; margin:0; letter-spacing:-1px; }}
-    .landing h1 span {{ background:linear-gradient(120deg,#818cf8,#c084fc); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }}
+    .landing h1 span {{ background:linear-gradient(120deg,#34d399,#a3e635); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }}
     .landing p {{ color:var(--muted); font-size:1.04rem; margin:.7rem 0 0; font-weight:400; }}
 
     .brand {{ display:flex; align-items:center; gap:10px; margin-bottom:4px; }}
@@ -87,17 +87,17 @@ def inject_css(accent: str = "#6366f1") -> None:
       border-radius:12px; font-weight:600; padding:.6rem 1.15rem; transition:all .18s ease;
       background:var(--glass); color:#e8eaf2; border:1px solid var(--line); backdrop-filter: blur(8px);
     }}
-    .stButton > button:hover {{ border-color:rgba(129,140,248,.6); transform:translateY(-1px); }}
+    .stButton > button:hover {{ border-color:rgba(52,211,153,.6); transform:translateY(-1px); }}
     .stButton > button[kind="primary"] {{
-      background:linear-gradient(180deg,#7275f6,#5b5ee8); color:#fff; border:0;
-      box-shadow:0 10px 26px -10px rgba(99,102,241,.85);
+      background:linear-gradient(180deg,#10b981,#059669); color:#fff; border:0;
+      box-shadow:0 10px 26px -10px rgba(16,185,129,.85);
     }}
-    .stButton > button[kind="primary"]:hover {{ transform:translateY(-1px); box-shadow:0 14px 32px -10px rgba(99,102,241,1); }}
+    .stButton > button[kind="primary"]:hover {{ transform:translateY(-1px); box-shadow:0 14px 32px -10px rgba(16,185,129,1); }}
     .stDownloadButton > button {{
       border-radius:12px; font-weight:700; background:var(--glass);
-      color:#c7d2fe; border:1px solid rgba(129,140,248,.45); backdrop-filter: blur(8px);
+      color:#a7f3d0; border:1px solid rgba(52,211,153,.45); backdrop-filter: blur(8px);
     }}
-    .stDownloadButton > button:hover {{ border-color:rgba(129,140,248,.9); color:#fff; }}
+    .stDownloadButton > button:hover {{ border-color:rgba(52,211,153,.9); color:#fff; }}
 
     div[data-testid="stExpander"] {{ border:1px solid var(--line); border-radius:14px; background:var(--glass); backdrop-filter: blur(8px); }}
     section[data-testid="stSidebar"] {{ background:rgba(8,9,15,.72); border-right:1px solid var(--line); backdrop-filter: blur(14px); }}
@@ -111,7 +111,7 @@ def inject_css(accent: str = "#6366f1") -> None:
     .flash {{
       position: fixed; right: 24px; bottom: 24px; z-index: 9999;
       background: rgba(15,17,26,.92); color:#f4f5fb; border:1px solid var(--line);
-      border-left:3px solid #818cf8; backdrop-filter: blur(16px);
+      border-left:3px solid #34d399; backdrop-filter: blur(16px);
       padding: 15px 20px; border-radius: 14px; font-weight:600; min-width: 234px;
       box-shadow: 0 24px 60px rgba(0,0,0,.6); animation: floatIn .5s ease;
     }}
@@ -148,7 +148,6 @@ def greeting() -> str:
 # ── Session defaults ─────────────────────────────────────────────────
 ss = st.session_state
 ss.setdefault("user", None)
-ss.setdefault("accent", "#6366f1")
 ss.setdefault("prompt", WEAK_PROMPT)
 ss.setdefault("results", None)
 ss.setdefault("fix", None)
@@ -160,7 +159,7 @@ ss.setdefault("target", None)  # None = demo prompt; dict = live HTTP bot
 ss.setdefault("summary", None)
 ss.setdefault("perfix", {})  # per-attack targeted fixes, keyed by attack id
 
-inject_css(ss.accent)
+inject_css()
 
 
 # ── LOGIN GATE (Claude-style opening) ────────────────────────────────
@@ -259,7 +258,6 @@ with st.sidebar:
         chosen_cats = st.multiselect("Attack categories", CATEGORIES, default=CATEGORIES)
         max_attacks = st.slider("Max attacks to run", 4, len(ATTACKS) + len(ss.custom_attacks), 16,
                                 help="On the free tier, fewer attacks finish faster. 32 works too but is slower.")
-        ss.accent = st.color_picker("Accent color", ss.accent)
 
         st.markdown("**✨ Generate attacks with AI**")
         n_ai = st.slider("How many", 3, 8, 5, key="n_ai")
