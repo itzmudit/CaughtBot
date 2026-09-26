@@ -238,13 +238,15 @@ with st.sidebar:
         ss.target = None
 
     # Auto-harden (prompt mode only — you can't rewrite a live bot's prompt)
-    if not ss.target:
+    if not live:
         st.subheader("🤖 Auto-harden")
         rounds = st.slider("Rounds", 1, 3, 2,
                            help="Each round re-runs the whole suite and keeps the fix only if the score improves.")
         auto_clicked = st.button("🤖 Run auto-harden", use_container_width=True)
     else:
         rounds, auto_clicked = 2, False
+        if not ss.target:
+            st.caption("Enter your bot's API URL above to attack it.")
 
     # Quick fixes gets its own bar in the sidebar
     st.subheader("🩹 Quick fixes")
