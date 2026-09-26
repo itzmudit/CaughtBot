@@ -153,3 +153,37 @@ if __name__ == "__main__":
     with open("sample_report.pdf", "wb") as fh:
         fh.write(pdf)
     print(f"Wrote sample_report.pdf ({len(pdf)} bytes)")
+
+
+def build_attacks_pdf(results: list[dict]) -> bytes:
+    """A PDF listing every attack prompt that was fired, with its result."""
+    styles = getSampleStyleSheet()
+    h1 = ParagraphStyle("ah1", parent=styles["Heading1"], textColor=INK, fontSize=18, spaceAfter=2)
+    sub = ParagraphStyle("asub", parent=styles["Normal"], textColor=MUTED, fontSize=9, spaceAfter=12)
+    body = ParagraphStyle("abody", parent=styles["Normal"], fontSize=9, leading=12)
+    hdr = ParagraphStyle("ahdr", parent=styles["Normal"], fontSize=9, leading=12, textColor=colors.white)
+
+    buf = BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=A4, topMargin=16 * mm, bottomMargin=14 * mm,
+                            leftMargin=15 * mm, rightMargin=15 * mm, title="CaughtBot Attacks Fired")
+    story = [Paragraph("CaughtBot — Attacks Fired", h1),
+             Paragraph(f"Generated {datetime.now():%d %b %Y, %H:%M} · {len(results)} attacks sent to the chatbot", sub)]
+
+    rows = [[Paragraph("<b>ID</b>", hdr), Paragraph("<b>Category</b>", hdr),
+             Paragraph("<b>Attack prompt</b>", hdr), Paragraph("<b>Result</b>", hdr)]]
+    for r in results:
+        outcome = f"BROKE ({r['severity']})" if r["succeeded"] else "blocked"
+        rows.append([Paragraph(r["id"], body), Paragraph(str(r["category"]), body),
+                     Paragraph(_esc(r["prompt"]), body), Paragraph(outcome, body)])
+    t = Table(rows, colWidths=[18 * mm, 30 * mm, 105 * mm, 27 * mm], repeatRows=1)
+    t.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), INK),
+        ("ROWBACKGROUNDS", (0, 1), (-1, -1), [colors.white, colors.HexColor("#f0fdf4")]),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.HexColor("#d1fae5")),
+        ("VALIGN", (0, 0), (-1, -1), "TOP"),
+        ("TOPPADDING", (0, 0), (-1, -1), 4), ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
+        ("LEFTPADDING", (0, 0), (-1, -1), 5), ("RIGHTPADDING", (0, 0), (-1, -1), 5),
+    ]))
+    story.append(t)
+    doc.build(story)
+    return buf.getvalue()

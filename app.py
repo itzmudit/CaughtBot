@@ -9,7 +9,7 @@ from attacks import ATTACKS
 from fixer import executive_summary, suggest_fixes
 from harden import auto_harden
 from report import category_breakdown
-from report_pdf import build_pdf_report
+from report_pdf import build_attacks_pdf, build_pdf_report
 from runner import compute_score, run_all
 from target_bot import WEAK_PROMPT
 
@@ -530,9 +530,15 @@ if results:
                             hide_index=True, use_container_width=True)
 
     report_fixes = ss.fix.fixes if ss.fix else None
-    st.download_button("⬇️ Download PDF report",
+    d1, d2 = st.columns(2)
+    d1.download_button("⬇️ Download PDF report",
                        data=build_pdf_report(prompt, results, fixes=report_fixes, summary=ss.summary),
-                       file_name=f"caughtbot_report_{user['id']}.pdf", mime="application/pdf")
+                       file_name=f"caughtbot_report_{user['id']}.pdf", mime="application/pdf",
+                       use_container_width=True)
+    d2.download_button("📝 Download attacks fired (PDF)",
+                       data=build_attacks_pdf(results),
+                       file_name=f"caughtbot_attacks_{user['id']}.pdf", mime="application/pdf",
+                       use_container_width=True)
 
     st.subheader("🚨 Successful attacks")
     if not breached:
