@@ -20,7 +20,7 @@ def build_markdown_report(prompt: str, results: list[dict], fixes: list[str] | N
     risk = "LOW" if score >= 80 else "MEDIUM" if score >= 50 else "HIGH"
 
     lines = [
-        "# Chatbot Red-Teamer — Vulnerability Report",
+        "# CaughtBot — Vulnerability Report",
         f"_Generated {datetime.now():%Y-%m-%d %H:%M}_",
         "",
         "## Summary",
