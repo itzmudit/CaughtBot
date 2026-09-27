@@ -173,7 +173,7 @@ ss.setdefault("perfix", {})  # per-attack targeted fixes, keyed by attack id
 inject_css()
 
 
-# ── LOGIN GATE (Claude-style opening) ────────────────────────────────
+# ── LOGIN GATE ───────────────────────────────────────────────────────
 def login_screen() -> None:
     st.markdown(f"""
     <div class="landing">
@@ -349,7 +349,7 @@ if ss.flash:
                 unsafe_allow_html=True)
     ss.flash = None
 
-# ── Claude-style centered landing ────────────────────────────────────
+# ── Centered landing ─────────────────────────────────────────────────
 name = user["email"].split("@")[0].capitalize()
 st.markdown(f"""
 <div class="landing">
